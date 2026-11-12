@@ -53,7 +53,7 @@ export const Navbar = () => {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="font-semibold text-lg tracking-tight text-[#184E38] dark:text-[#E2EDE7] group-hover:text-[#123E2C] dark:group-hover:text-white transition-colors">
-              Queueless
+              Kuefy
             </span>
             <span className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#184E38] dark:text-[#A7D7BC] bg-[#E2EDE7] dark:bg-[#184E38]/40 rounded-full border border-[#C5DCCF] dark:border-[#2D5A43]">
               Live

@@ -48,7 +48,7 @@ app.use(mongoSanitize());
 app.use(cookieParser(process.env.COOKIE_SECRET || 'queueless_cookie_secret'));
 
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'QueueLess API Server' });
+  res.status(200).json({ message: 'Kuefy API Server' });
 });
 
 app.use('/api/v1', routes);

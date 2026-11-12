@@ -1,4 +1,4 @@
-# QueueLess
+# Kuefy
 
 A real-time virtual queue management system built to eliminate physical waiting lines. Customers can join service queues remotely without creating an account and track their live position via WebSockets. Business owners get a dashboard to manage services, monitor queues, and call customers in FIFO order.
 
@@ -27,8 +27,8 @@ A real-time virtual queue management system built to eliminate physical waiting 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Anivesh91/queue_test.git
-cd queue_test
+git clone https://github.com/Anivesh91/Kuefy.git
+cd Kuefy
 ```
 
 ### 2. Backend Setup
@@ -44,7 +44,7 @@ Create a `.env` file in the `backend` directory:
 PORT=5000
 NODE_ENV=development
 CLIENT_URL=http://localhost:5173
-MONGO_URI=mongodb://127.0.0.1:27017/queueless
+MONGO_URI=mongodb://127.0.0.1:27017/kuefy
 REDIS_URL=redis://127.0.0.1:6379
 JWT_SECRET=your_jwt_secret
 COOKIE_SECRET=your_cookie_secret

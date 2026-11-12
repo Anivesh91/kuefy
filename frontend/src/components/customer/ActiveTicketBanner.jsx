@@ -12,16 +12,16 @@ export const ActiveTicketBanner = () => {
 
   const purgeTicketFromStorage = (publicToken) => {
     try {
-      const saved = JSON.parse(localStorage.getItem('queueless_active_tickets') || '[]');
+      const saved = JSON.parse(localStorage.getItem('kuefy_active_tickets') || localStorage.getItem('queueless_active_tickets') || '[]');
       const updated = saved.filter((t) => t.publicToken !== publicToken);
-      localStorage.setItem('queueless_active_tickets', JSON.stringify(updated));
+      localStorage.setItem('kuefy_active_tickets', JSON.stringify(updated)); localStorage.removeItem('queueless_active_tickets');
     } catch (e) {}
     setActiveTicket(null);
   };
 
   const verifyAndLoadActiveTicket = async () => {
     try {
-      const saved = JSON.parse(localStorage.getItem('queueless_active_tickets') || '[]');
+      const saved = JSON.parse(localStorage.getItem('kuefy_active_tickets') || localStorage.getItem('queueless_active_tickets') || '[]');
       if (!Array.isArray(saved) || saved.length === 0) {
         setActiveTicket(null);
         return;

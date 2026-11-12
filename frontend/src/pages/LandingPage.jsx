@@ -15,6 +15,148 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+/* -------------------------------------------------------------------------- */
+/* Full-Page Background Queue Flow Curve (Zero Card Container)                */
+/* -------------------------------------------------------------------------- */
+const BackgroundQueueJourney = () => {
+  return (
+    <div className="absolute inset-0 w-full h-[720px] sm:h-[800px] overflow-hidden pointer-events-none z-0">
+      <svg
+        viewBox="0 0 1440 620"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="xMidYMid slice"
+        className="w-full h-full opacity-65 dark:opacity-35 transition-opacity"
+      >
+        <defs>
+          {/* Main Wave Gradient */}
+          <linearGradient id="queueFlowGrad" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#184E38" stopOpacity="0.1" />
+            <stop offset="20%" stopColor="#184E38" stopOpacity="0.75" />
+            <stop offset="50%" stopColor="#D95D39" stopOpacity="0.85" />
+            <stop offset="80%" stopColor="#10B981" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#10B981" stopOpacity="0.1" />
+          </linearGradient>
+
+          {/* Soft Wave Glow */}
+          <linearGradient id="queueFlowGlow" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#184E38" stopOpacity="0" />
+            <stop offset="25%" stopColor="#184E38" stopOpacity="0.25" />
+            <stop offset="50%" stopColor="#D95D39" stopOpacity="0.25" />
+            <stop offset="80%" stopColor="#10B981" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Glow Filter */}
+          <filter id="waveBlur" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        {/* Ambient Blurred Shadow Curve */}
+        <path
+          d="M -60 400 C 260 500, 480 270, 720 370 C 960 470, 1180 250, 1500 350"
+          stroke="url(#queueFlowGlow)"
+          strokeWidth="16"
+          fill="none"
+          filter="url(#waveBlur)"
+        />
+
+        {/* Delicate Secondary Echo Dashed Line */}
+        <path
+          d="M -60 415 C 260 515, 480 285, 720 385 C 960 485, 1180 265, 1500 365"
+          stroke="currentColor"
+          className="text-[#184E38]/20 dark:text-emerald-500/15"
+          strokeWidth="1"
+          strokeDasharray="4 6"
+          fill="none"
+        />
+
+        {/* Primary Flowing Journey Curve */}
+        <path
+          d="M -60 400 C 260 500, 480 270, 720 370 C 960 470, 1180 250, 1500 350"
+          stroke="url(#queueFlowGrad)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+
+        {/* Traveling Energy Pulse Along Path */}
+        <motion.circle
+          r="5.5"
+          className="fill-[#184E38] dark:fill-emerald-400"
+          animate={{
+            cx: [-60, 200, 480, 720, 960, 1200, 1500],
+            cy: [400, 455, 290, 370, 450, 275, 350],
+            scale: [0.8, 1.25, 0.9, 1.3, 0.9, 1.2, 0.8],
+          }}
+          transition={{
+            duration: 8.5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+
+        {/* Waypoint 1: Joined */}
+        <g transform="translate(240, 455)">
+          <circle r="16" className="fill-[#184E38]/10 dark:fill-emerald-400/10" />
+          <circle r="8" className="fill-[#FAF8F3] dark:fill-[#151D18] stroke-[#184E38] dark:stroke-emerald-400" strokeWidth="2.5" />
+          <circle r="3" className="fill-[#184E38] dark:fill-emerald-400" />
+          <text
+            y="26"
+            textAnchor="middle"
+            className="fill-[#59665F] dark:fill-stone-400 font-mono text-[10px] font-semibold tracking-wider uppercase"
+          >
+            Joined Remotely
+          </text>
+        </g>
+
+        {/* Waypoint 2: Roaming & Saved Time */}
+        <g transform="translate(720, 370)">
+          <motion.g animate={{ y: [0, -4, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}>
+            <circle r="18" className="fill-[#D95D39]/15" />
+            <circle r="9" className="fill-[#FAF8F3] dark:fill-[#151D18] stroke-[#D95D39]" strokeWidth="2.5" />
+            <circle r="3.5" className="fill-[#D95D39]" />
+            <text
+              y="-16"
+              textAnchor="middle"
+              className="fill-[#D95D39] font-mono text-[10px] font-bold tracking-wider uppercase"
+            >
+              12 min saved • Roaming
+            </text>
+          </motion.g>
+        </g>
+
+        {/* Waypoint 3: Now Serving & Chime */}
+        <g transform="translate(1220, 275)">
+          <motion.circle
+            r="16"
+            stroke="#10B981"
+            strokeWidth="1.5"
+            fill="none"
+            animate={{ scale: [1, 2.2], opacity: [0.7, 0] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
+          />
+          <circle r="18" className="fill-emerald-500/15" />
+          <circle r="9" className="fill-[#FAF8F3] dark:fill-[#151D18] stroke-emerald-500" strokeWidth="2.5" />
+          <circle r="3.5" className="fill-emerald-500" />
+          <text
+            y="26"
+            textAnchor="middle"
+            className="fill-emerald-600 dark:fill-emerald-400 font-mono text-[10px] font-bold tracking-wider uppercase"
+          >
+            Your Turn • Window 03
+          </text>
+        </g>
+      </svg>
+    </div>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* Main Landing Page                                                          */
+/* -------------------------------------------------------------------------- */
 export const LandingPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [chimePlayed, setChimePlayed] = useState(false);
@@ -52,7 +194,7 @@ export const LandingPage = () => {
 
   return (
     <div className="relative min-h-screen w-full bg-[#F5F2EB] text-[#1C2520] dark:bg-[#131B17] dark:text-[#E8EFEA] selection:bg-[#184E38] selection:text-white overflow-hidden transition-colors duration-200">
-      {/* Ambient Floating Glow Blobs (Signature LoginPage aesthetic) */}
+      {/* Ambient Floating Glow Blobs */}
       <motion.div
         className="absolute -top-32 -left-32 w-96 h-96 bg-[#EBE4D5]/70 dark:bg-[#184E38]/10 rounded-full blur-3xl pointer-events-none"
         animate={{
@@ -71,6 +213,9 @@ export const LandingPage = () => {
         }}
         transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
       />
+
+      {/* Full-Page Background Queue Wave Curve (Spanning seamlessly in background) */}
+      <BackgroundQueueJourney />
 
       {/* Hero Section */}
       <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 lg:pt-24 lg:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto z-10">
@@ -172,148 +317,36 @@ export const LandingPage = () => {
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </motion.div>
-        </div>
 
-        {/* Interactive Live Queue Timeline Doodle (Signature LoginPage Component) */}
-        <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.85, delay: 0.65 }}
-          className="mt-16 sm:mt-20 max-w-xl mx-auto"
-        >
-          <div className="bg-[#FAF8F3]/90 dark:bg-stone-900/90 backdrop-blur-md p-6 rounded-3xl border border-stone-200/80 dark:border-stone-800 shadow-soft-float">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-200/60 dark:border-stone-800 mb-3 text-xs text-[#59665F] dark:text-stone-400">
-              <span className="font-serif font-bold text-[#184E38] dark:text-[#A7D7BC] text-sm">
-                Live Queue Journey Simulator
-              </span>
-              <span className="text-[11px] font-mono uppercase bg-[#E2EDE7] dark:bg-[#184E38]/40 text-[#184E38] dark:text-[#A7D7BC] px-2 py-0.5 rounded-full font-bold">
-                Interactive
-              </span>
-            </div>
-
-            <svg
-              viewBox="0 0 380 90"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-full h-auto overflow-visible"
+          {/* Audio Chime Preview Trigger */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.65 }}
+            className="mt-6 flex justify-center"
+          >
+            <button
+              type="button"
+              onClick={playPreviewChime}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/60 dark:bg-stone-900/60 hover:bg-white dark:hover:bg-stone-800/80 border border-stone-200/80 dark:border-stone-800 text-xs text-[#3F6451] dark:text-[#A7D7BC] font-medium shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-95"
+              title="Click to test harmonic airport chime sound"
             >
-              {/* Baseline Axis Line */}
-              <motion.path
-                d="M 18 36 L 18 68 Q 18 78 32 78 L 360 78"
-                stroke="#2D5A43"
-                strokeWidth="2"
-                strokeLinecap="round"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 0.8, delay: 0.2, ease: 'easeInOut' }}
-              />
-
-              {/* Self-Drawing Wave Curve */}
-              <motion.path
-                d="M 28 42 C 75 56, 120 32, 160 42 C 200 52, 245 32, 285 38 C 310 34, 325 42, 340 45"
-                stroke="#2D5A43"
-                strokeWidth="2"
-                strokeLinecap="round"
-                fill="none"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              />
-
-              {/* Traveling Pulse Along Curve */}
-              <motion.circle
-                r="4.5"
-                fill="#184E38"
-                stroke="#FFFFFF"
-                strokeWidth="1.5"
-                animate={{
-                  cx: [28, 90, 160, 220, 285, 340],
-                  cy: [42, 40, 42, 45, 38, 45],
-                  scale: [1, 1.25, 1, 1.2, 1, 1.5],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                  repeatDelay: 1.2,
-                }}
-              />
-
-              {/* Node 1: Joined remotely */}
-              <circle cx="28" cy="42" r="8" fill="#E2EDE7" stroke="#2D5A43" strokeWidth="2.5" />
-              <circle cx="28" cy="42" r="3" fill="#2D5A43" />
-
-              {/* Node 2: 12 min saved (Gentle Levitating Float) */}
-              <motion.g
-                animate={{ y: [0, -3.5, 0] }}
-                transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <circle cx="190" cy="45" r="8" fill="#F8A084" stroke="#D95D39" strokeWidth="2.5" />
-              </motion.g>
-
-              {/* Node 3: Your turn (Interactive Airport Chime Preview) */}
-              <motion.g onClick={playPreviewChime} className="cursor-pointer group">
-                <motion.circle
-                  cx="340"
-                  cy="45"
-                  r="8"
-                  stroke="#2D5A43"
-                  strokeWidth="1.5"
-                  fill="none"
-                  animate={{
-                    scale: [1, 2.2],
-                    opacity: [0.75, 0],
-                  }}
-                  transition={{
-                    duration: 2.2,
-                    repeat: Infinity,
-                    ease: 'easeOut',
-                  }}
-                />
-                <circle
-                  cx="340"
-                  cy="45"
-                  r="8"
-                  fill="#E2EDE7"
-                  stroke="#2D5A43"
-                  strokeWidth="2.5"
-                  className="group-hover:fill-emerald-200 transition-colors"
-                />
-                <circle cx="340" cy="45" r="3" fill="#2D5A43" />
-              </motion.g>
-            </svg>
-
-            {/* Waypoint Labels */}
-            <div className="flex justify-between items-center text-[11px] font-medium text-[#4D5D55] dark:text-stone-300 pt-2 px-1">
-              <span className="-ml-1">Joined Remotely</span>
-              <span className="text-[#3D4C44] dark:text-stone-200 font-semibold">12 min saved</span>
-              <button
-                type="button"
-                onClick={playPreviewChime}
-                className="inline-flex items-center gap-1 text-[#184E38] dark:text-[#A7D7BC] font-bold hover:underline cursor-pointer focus:outline-none"
-                title="Click to test chime"
-              >
-                <span>Your turn</span>
-                <Volume2
-                  className={`w-3.5 h-3.5 ${
-                    chimePlayed ? 'text-emerald-600 animate-bounce' : 'text-[#184E38] dark:text-[#A7D7BC]'
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-        </motion.div>
+              <Volume2 className={`w-3.5 h-3.5 ${chimePlayed ? 'text-emerald-600 animate-bounce' : ''}`} />
+              <span>{chimePlayed ? 'Chime Broadcasted!' : 'Test Airport Chime'}</span>
+            </button>
+          </motion.div>
+        </div>
       </section>
 
       {/* How it Works Section */}
-      <section className="py-20 bg-white/70 dark:bg-stone-900/60 border-t border-stone-200/80 dark:border-stone-800 transition-colors duration-200">
+      <section className="py-20 bg-white/70 dark:bg-stone-900/60 border-t border-stone-200/80 dark:border-stone-800 transition-colors duration-200 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="text-[11px] font-bold tracking-[0.2em] text-[#3F6451] dark:text-[#A7D7BC] uppercase">
               SEAMLESS 3-STEP EXPERIENCE
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[#1A231E] dark:text-white mt-2 tracking-tight">
-              How Queueless works
+              How Kuefy works
             </h2>
             <p className="mt-3 text-sm sm:text-base text-[#59665F] dark:text-stone-400">
               Designed for physical businesses and modern customers who value their time.
@@ -364,7 +397,7 @@ export const LandingPage = () => {
       </section>
 
       {/* Feature Bento Grid */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span className="text-[11px] font-bold tracking-[0.2em] text-[#3F6451] dark:text-[#A7D7BC] uppercase">
             ENGINEERED FOR SPEED
@@ -408,7 +441,7 @@ export const LandingPage = () => {
       </section>
 
       {/* Bottom CTA Banner */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto relative z-10">
         <div className="bg-[#184E38] rounded-3xl p-8 sm:p-14 text-white text-center relative overflow-hidden shadow-soft-lift">
           <div className="relative z-10 max-w-2xl mx-auto">
             <h2 className="font-serif text-3xl sm:text-5xl font-normal leading-tight">
@@ -437,3 +470,5 @@ export const LandingPage = () => {
     </div>
   );
 };
+
+export default LandingPage;

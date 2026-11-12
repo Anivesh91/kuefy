@@ -14,11 +14,19 @@ export const AuthProvider = ({ children }) => {
       const res = await authApi.getMe();
       if (res?.data?.user) {
         setUser(res.data.user);
+        const legacyToken = localStorage.getItem('queueless_token');
+        if (legacyToken) {
+          if (!localStorage.getItem('kuefy_token')) {
+            localStorage.setItem('kuefy_token', legacyToken);
+          }
+          localStorage.removeItem('queueless_token');
+        }
       } else {
         setUser(null);
       }
     } catch (err) {
       setUser(null);
+      localStorage.removeItem('kuefy_token');
       localStorage.removeItem('queueless_token');
     } finally {
       setLoading(false);
@@ -34,7 +42,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await authApi.login({ email, password });
       if (res?.data?.token) {
-        localStorage.setItem('queueless_token', res.data.token);
+        localStorage.setItem('kuefy_token', res.data.token);
+        localStorage.removeItem('queueless_token');
       }
       setUser(res?.data?.user || null);
       return res?.data;
@@ -49,7 +58,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await authApi.register({ name, email, password });
       if (res?.data?.token) {
-        localStorage.setItem('queueless_token', res.data.token);
+        localStorage.setItem('kuefy_token', res.data.token);
+        localStorage.removeItem('queueless_token');
       }
       setUser(res?.data?.user || null);
       return res?.data;
@@ -64,7 +74,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await authApi.googleAuth(credential);
       if (res?.data?.token) {
-        localStorage.setItem('queueless_token', res.data.token);
+        localStorage.setItem('kuefy_token', res.data.token);
+        localStorage.removeItem('queueless_token');
       }
       setUser(res?.data?.user || null);
       return res?.data;
@@ -80,6 +91,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.warn('Logout request warning:', err.message);
     } finally {
+      localStorage.removeItem('kuefy_token');
       localStorage.removeItem('queueless_token');
       setUser(null);
     }

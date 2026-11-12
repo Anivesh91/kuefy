@@ -17,7 +17,7 @@ router.get('/health', (req, res) => {
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
       },
-      'QueueLess API is healthy and operational'
+      'Kuefy API is healthy and operational'
     )
   );
 });

@@ -53,7 +53,7 @@ export const SocketProvider = ({ children }) => {
 
   const joinOwnerRoom = (ownerId) => {
     if (socket && socket.connected) {
-      const token = localStorage.getItem('queueless_token');
+      const token = localStorage.getItem('kuefy_token') || localStorage.getItem('queueless_token');
       socket.emit('join:owner', { ownerId, token });
     }
   };

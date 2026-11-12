@@ -1,7 +1,7 @@
 {
-  "name": "queueless-backend",
+  "name": "kuefy-backend",
   "version": "1.0.0",
-  "description": "QueueLess Virtual Queue System Backend",
+  "description": "Kuefy Virtual Queue System Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

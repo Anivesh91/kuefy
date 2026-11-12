@@ -8,7 +8,7 @@
     @apply antialiased;
   }
   body {
-    @apply bg-[#F5F2EB] text-[#1C2520] dark:bg-[#131B17] dark:text-[#E8EFEA] min-h-screen antialiased transition-colors duration-150;
+    @apply bg-[#F5F2EB] text-[#1C2520] dark:bg-[#080A09] dark:text-[#E8EFEA] min-h-screen antialiased transition-colors duration-150;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     selection-background-color: #184E38;
   }
@@ -53,4 +53,85 @@
 
 .animate-live-glow {
   animation: live-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Rising Ball / Stairs Animation Loader (Uiverse / Shadcn UI)                */
+/* -------------------------------------------------------------------------- */
+:root {
+  --loader-ball-color: #184E38;
+  --loader-ball-glow: none;
+  --loader-step-color: #C5DCCF;
+  --loader-step-fade: rgba(197, 220, 207, 0);
+}
+
+.dark {
+  --loader-ball-color: #D4FF00;
+  --loader-ball-glow: 0 0 16px rgba(212, 255, 0, 0.5);
+  --loader-step-color: #2D3A32;
+  --loader-step-fade: rgba(45, 58, 50, 0);
+}
+
+.loader {
+  position: relative;
+  width: 120px;
+  height: 90px;
+  margin: 0 auto;
+}
+
+.loader:before {
+  content: "";
+  position: absolute;
+  bottom: 30px;
+  left: 50px;
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background: var(--loader-ball-color, #184E38);
+  box-shadow: var(--loader-ball-glow, none);
+  animation: loading-bounce 0.5s ease-in-out infinite alternate;
+}
+
+.loader:after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 7px;
+  width: 45px;
+  border-radius: 4px;
+  box-shadow: 0 5px 0 var(--loader-step-color, #C5DCCF),
+              -35px 50px 0 var(--loader-step-color, #C5DCCF),
+              -70px 95px 0 var(--loader-step-color, #C5DCCF);
+  animation: loading-step 1s ease-in-out infinite;
+}
+
+@keyframes loading-bounce {
+  0% {
+    transform: scale(1, 0.7);
+  }
+  40% {
+    transform: scale(0.8, 1.2);
+  }
+  60% {
+    transform: scale(1, 1);
+  }
+  100% {
+    bottom: 140px;
+  }
+}
+
+@keyframes loading-step {
+  0% {
+    box-shadow: 0 10px 0 var(--loader-step-fade, rgba(0, 0, 0, 0)),
+                0 10px 0 var(--loader-step-color, #f2f2f2),
+                -35px 50px 0 var(--loader-step-color, #f2f2f2),
+                -70px 90px 0 var(--loader-step-color, #f2f2f2);
+  }
+  100% {
+    box-shadow: 0 10px 0 var(--loader-step-color, #f2f2f2),
+                -35px 50px 0 var(--loader-step-color, #f2f2f2),
+                -70px 90px 0 var(--loader-step-color, #f2f2f2),
+                -70px 90px 0 var(--loader-step-fade, rgba(0, 0, 0, 0));
+  }
 }

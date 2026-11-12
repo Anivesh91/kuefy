@@ -46,7 +46,7 @@ export const Footer = () => {
               ))}
             </div>
             <div>
-              <span className="text-sm font-serif font-bold text-[#184E38] dark:text-[#E2EDE7]">Queueless</span>
+              <span className="text-sm font-serif font-bold text-[#184E38] dark:text-[#E2EDE7]">Kuefy</span>
               <span className="text-xs text-[#59665F] dark:text-stone-400 ml-2">— More time for what matters</span>
             </div>
           </div>
@@ -62,7 +62,7 @@ export const Footer = () => {
               Owner Portal
             </Link>
             <span className="text-stone-400 dark:text-stone-600">
-              &copy; {new Date().getFullYear()} Queueless. All rights reserved.
+              &copy; {new Date().getFullYear()} Kuefy. All rights reserved.
             </span>
           </div>
         </div>
@@ -70,3 +70,5 @@ export const Footer = () => {
     </footer>
   );
 };
+
+export default Footer;

@@ -9,7 +9,7 @@ import { Footer } from './components/common/Footer';
 import { ActiveTicketBanner } from './components/customer/ActiveTicketBanner';
 import { AppRoutes } from './routes/AppRoutes';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'queueless-google-client-id-placeholder';
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'kuefy-google-client-id-placeholder';
 
 export const App = () => {
   return (

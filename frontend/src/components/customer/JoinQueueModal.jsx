@@ -40,7 +40,7 @@ export const JoinQueueModal = ({ isOpen, onClose, service }) => {
 
       if (publicToken) {
         try {
-          const saved = JSON.parse(localStorage.getItem('queueless_active_tickets') || '[]');
+          const saved = JSON.parse(localStorage.getItem('kuefy_active_tickets') || localStorage.getItem('queueless_active_tickets') || '[]');
           const filtered = saved.filter((t) => t.publicToken !== publicToken);
           filtered.unshift({
             publicToken,
@@ -50,7 +50,7 @@ export const JoinQueueModal = ({ isOpen, onClose, service }) => {
             status: data.ticket?.status || 'WAITING',
             joinedAt: data.ticket?.joinedAt || new Date().toISOString(),
           });
-          localStorage.setItem('queueless_active_tickets', JSON.stringify(filtered.slice(0, 5)));
+          localStorage.setItem('kuefy_active_tickets', JSON.stringify(filtered.slice(0, 5))); localStorage.removeItem('queueless_active_tickets');
         } catch (storageErr) {
           console.warn('Storage error:', storageErr);
         }

@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ticketApi } from '../../api/ticketApi';
 import { useSocket } from '../../context/SocketContext';
+import { RisingBallLoader } from '@/components/ui/rising-ball';
 import {
   BellRing,
   Clock,
@@ -179,14 +180,9 @@ export const TicketTrackerPage = () => {
   // Loading State
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-[#F5F2EB] flex flex-col items-center justify-center p-6 text-[#1C2520]">
-        <div className="w-10 h-10 rounded-full bg-[#184E38] flex items-center justify-center gap-[2.5px] px-1.5 shadow-sm mb-4 animate-pulse">
-          <span className="w-[2px] h-2 bg-emerald-200 rounded-full" />
-          <span className="w-[2px] h-4 bg-white rounded-full" />
-          <span className="w-[2px] h-2 bg-emerald-200 rounded-full" />
-        </div>
-        <p className="font-serif text-xl font-normal text-[#1A231F]">Loading your live ticket...</p>
-        <p className="text-xs text-[#59665F] mt-1">Connecting to real-time queue dispatcher</p>
+      <div className="min-h-screen w-full bg-[#F5F2EB] dark:bg-[#080A09] flex flex-col items-center justify-center p-6 text-[#1C2520] dark:text-white transition-colors duration-200">
+        <RisingBallLoader text="Loading your live ticket..." />
+        <p className="text-xs text-[#59665F] dark:text-stone-400 mt-2 font-mono">Connecting to real-time queue dispatcher</p>
       </div>
     );
   }
@@ -335,7 +331,7 @@ export const TicketTrackerPage = () => {
             >
               <Sparkles className="w-5 h-5 text-emerald-600 animate-spin" />
               <span className="text-sm font-semibold text-[#184E38]">
-                Service Completed — Thank you for using QueueLess!
+                Service Completed — Thank you for using Kuefy!
               </span>
             </motion.div>
           )}
@@ -797,7 +793,7 @@ export const TicketTrackerPage = () => {
       {/* Clean Bottom Footer */}
       <footer className="w-full max-w-lg mx-auto py-2 text-center text-[11px] text-[#788880] relative z-10">
         <span>Powered by </span>
-        <strong className="text-[#184E38]">QueueLess Virtual Queues</strong>
+        <strong className="text-[#184E38]">Kuefy Virtual Queues</strong>
         <span> • Live real-time pass</span>
       </footer>
 

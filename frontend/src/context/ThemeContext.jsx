@@ -5,7 +5,7 @@ const ThemeContext = createContext(null);
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     try {
-      const savedTheme = localStorage.getItem('queueless_theme');
+      const savedTheme = localStorage.getItem('kuefy_theme') || localStorage.getItem('queueless_theme');
       if (savedTheme === 'dark' || savedTheme === 'light') {
         return savedTheme;
       }
@@ -31,7 +31,7 @@ export const ThemeProvider = ({ children }) => {
     }
 
     try {
-      localStorage.setItem('queueless_theme', theme);
+      localStorage.setItem('kuefy_theme', theme); localStorage.removeItem('queueless_theme');
     } catch (e) {
       console.warn('Could not save theme to localStorage:', e);
     }

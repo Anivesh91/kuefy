@@ -181,7 +181,7 @@ export const LoginPage = ({ initialMode }) => {
             ))}
           </div>
           <span className="font-semibold text-lg tracking-tight text-[#184E38] group-hover:text-[#123E2C] transition-colors">
-            Queueless
+            Kuefy
           </span>
         </Link>
       </motion.header>
@@ -661,7 +661,7 @@ export const LoginPage = ({ initialMode }) => {
               <div className="pt-2 text-center text-xs text-stone-600">
                 {mode === 'login' ? (
                   <>
-                    New to Queueless?{' '}
+                    New to Kuefy?{' '}
                     <button
                       type="button"
                       onClick={() => handleTabSwitch('register')}
