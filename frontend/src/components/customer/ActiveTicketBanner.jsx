@@ -6,7 +6,7 @@ import { Ticket, ArrowRight, X } from 'lucide-react';
 
 export const ActiveTicketBanner = () => {
   const location = useLocation();
-  const { socket } = useSocket();
+  const { socket, joinTicketRoom, leaveTicketRoom } = useSocket();
   const [activeTicket, setActiveTicket] = useState(null);
   const [dismissed, setDismissed] = useState(false);
 
@@ -43,6 +43,7 @@ export const ActiveTicketBanner = () => {
 
         if (liveTicket && ['WAITING', 'CALLED', 'SERVING'].includes(liveTicket.status)) {
           setActiveTicket({
+            ticketId: liveTicket.id || liveTicket._id || candidate.ticketId,
             publicToken: liveTicket.publicToken,
             ticketNumber: liveTicket.ticketNumber,
             serviceName: data.service?.name || candidate.serviceName,
@@ -65,19 +66,40 @@ export const ActiveTicketBanner = () => {
   }, []);
 
   useEffect(() => {
+    if (!activeTicket?.ticketId) return;
+    joinTicketRoom(activeTicket.publicToken, activeTicket.ticketId);
+    return () => {
+      leaveTicketRoom(activeTicket.ticketId);
+    };
+  }, [activeTicket?.ticketId, activeTicket?.publicToken, joinTicketRoom, leaveTicketRoom]);
+
+  useEffect(() => {
     if (!socket || !activeTicket) return;
 
     const handleTicketEnd = (payload) => {
-      if (payload?.ticketNumber === activeTicket.ticketNumber) {
+      const matchId = payload?.ticketId && activeTicket.ticketId && payload.ticketId.toString() === activeTicket.ticketId.toString();
+      const matchToken = payload?.publicToken && payload.publicToken === activeTicket.publicToken;
+      if (matchId || matchToken) {
         purgeTicketFromStorage(activeTicket.publicToken);
       }
     };
 
+    const handleStatusUpdate = (payload) => {
+      const matchId = payload?.ticketId && activeTicket.ticketId && payload.ticketId.toString() === activeTicket.ticketId.toString();
+      if (matchId && payload.status) {
+        setActiveTicket((prev) => (prev ? { ...prev, status: payload.status } : prev));
+      }
+    };
+
+    socket.on('ticket:called', handleStatusUpdate);
+    socket.on('ticket:serving', handleStatusUpdate);
     socket.on('ticket:completed', handleTicketEnd);
     socket.on('ticket:cancelled', handleTicketEnd);
     socket.on('ticket:noShow', handleTicketEnd);
 
     return () => {
+      socket.off('ticket:called', handleStatusUpdate);
+      socket.off('ticket:serving', handleStatusUpdate);
       socket.off('ticket:completed', handleTicketEnd);
       socket.off('ticket:cancelled', handleTicketEnd);
       socket.off('ticket:noShow', handleTicketEnd);

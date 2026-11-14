@@ -56,12 +56,16 @@ export const ServiceQueuePage = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleQueueUpdated = () => {
-      fetchData();
+    const handleQueueUpdated = (payload) => {
+      if (!payload?.serviceId || payload.serviceId === serviceId) {
+        fetchData();
+      }
     };
 
-    const handleStatusChanged = () => {
-      fetchData();
+    const handleStatusChanged = (payload) => {
+      if (!payload?.serviceId || payload.serviceId === serviceId) {
+        fetchData();
+      }
     };
 
     socket.on('queue:updated', handleQueueUpdated);
@@ -71,7 +75,7 @@ export const ServiceQueuePage = () => {
       socket.off('queue:updated', handleQueueUpdated);
       socket.off('queue:statusChanged', handleStatusChanged);
     };
-  }, [socket]);
+  }, [socket, serviceId]);
 
   if (loading) {
     return (

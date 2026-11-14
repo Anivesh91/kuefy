@@ -18,7 +18,7 @@ const CATEGORIES = [
 ];
 
 export const CustomerHomePage = () => {
-  const { socket, isConnected } = useSocket();
+  const { socket, isConnected, joinDirectoryRoom, leaveDirectoryRoom } = useSocket();
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -26,6 +26,13 @@ export const CustomerHomePage = () => {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [city, setCity] = useState('');
   const [isFindTicketOpen, setIsFindTicketOpen] = useState(false);
+
+  useEffect(() => {
+    joinDirectoryRoom();
+    return () => {
+      leaveDirectoryRoom();
+    };
+  }, [joinDirectoryRoom, leaveDirectoryRoom]);
 
   const fetchOrganizations = useCallback(async (isBackground = false) => {
     try {
@@ -74,13 +81,18 @@ export const CustomerHomePage = () => {
       fetchOrganizations(true);
     };
 
+    const handleReconnect = () => {
+      fetchOrganizations(true);
+    };
+
     socket.on('queue:statusChanged', handleQueueStatusChanged);
     socket.on('queue:updated', handleQueueUpdated);
-    socket.on('connect', () => fetchOrganizations(true));
+    socket.on('connect', handleReconnect);
 
     return () => {
       socket.off('queue:statusChanged', handleQueueStatusChanged);
       socket.off('queue:updated', handleQueueUpdated);
+      socket.off('connect', handleReconnect);
     };
   }, [socket, fetchOrganizations]);
 

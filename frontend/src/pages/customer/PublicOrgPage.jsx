@@ -16,7 +16,7 @@ import {
 
 export const PublicOrgPage = () => {
   const { slug } = useParams();
-  const { socket } = useSocket();
+  const { socket, joinOrgRoom, leaveOrgRoom } = useSocket();
 
   const [organization, setOrganization] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,6 +39,14 @@ export const PublicOrgPage = () => {
   useEffect(() => {
     fetchOrganization(false);
   }, [slug, fetchOrganization]);
+
+  useEffect(() => {
+    if (!organization?._id) return;
+    joinOrgRoom(organization._id);
+    return () => {
+      leaveOrgRoom(organization._id);
+    };
+  }, [organization?._id, joinOrgRoom, leaveOrgRoom]);
 
   useEffect(() => {
     if (!socket) return;
@@ -84,13 +92,18 @@ export const PublicOrgPage = () => {
       fetchOrganization(true);
     };
 
+    const handleReconnect = () => {
+      fetchOrganization(true);
+    };
+
     socket.on('queue:updated', handleQueueUpdated);
     socket.on('queue:statusChanged', handleStatusChanged);
-    socket.on('connect', () => fetchOrganization(true));
+    socket.on('connect', handleReconnect);
 
     return () => {
       socket.off('queue:updated', handleQueueUpdated);
       socket.off('queue:statusChanged', handleStatusChanged);
+      socket.off('connect', handleReconnect);
     };
   }, [socket, fetchOrganization]);
 

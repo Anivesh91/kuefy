@@ -20,12 +20,21 @@ import {
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { socket, joinOwnerRoom } = useSocket();
+  const { socket, joinOwnerRoom, leaveOwnerRoom } = useSocket();
 
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [loadingToggle, setLoadingToggle] = useState(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      joinOwnerRoom(user.id);
+    }
+    return () => {
+      leaveOwnerRoom();
+    };
+  }, [user?.id, joinOwnerRoom, leaveOwnerRoom]);
 
   const fetchDashboard = async () => {
     try {
@@ -39,9 +48,6 @@ export const DashboardPage = () => {
       }
 
       setDashboardData(data);
-      if (user?.id) {
-        joinOwnerRoom(user.id);
-      }
     } catch (err) {
       setError(err.message || 'Failed to load dashboard metrics.');
     } finally {

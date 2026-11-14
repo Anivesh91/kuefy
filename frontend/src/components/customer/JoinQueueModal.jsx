@@ -44,6 +44,7 @@ export const JoinQueueModal = ({ isOpen, onClose, service }) => {
           const filtered = saved.filter((t) => t.publicToken !== publicToken);
           filtered.unshift({
             publicToken,
+            ticketId: data.ticket?.id || data.ticket?._id,
             ticketNumber: data.ticket?.ticketNumber,
             serviceName: service.name,
             organizationName: data.ticket?.organizationName || service.organizationId?.name,

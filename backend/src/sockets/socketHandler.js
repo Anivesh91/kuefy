@@ -31,22 +31,27 @@ const initSockets = (io) => {
       }
     });
 
-    socket.on('join:owner', ({ ownerId, token }) => {
-      if (token) {
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'queueless_secret');
-          if (decoded && decoded.id) {
-            socket.join(`owner:${decoded.id}`);
-            return;
-          }
-        } catch (err) {
-          // ignore invalid token and check ownerId
+    socket.on('join:owner', ({ token }) => {
+      if (!token) return;
+      try {
+        const secret = process.env.JWT_SECRET || 'queueless_secret';
+        const decoded = jwt.verify(token, secret);
+        if (decoded && decoded.id) {
+          socket.join(`owner:${decoded.id}`);
         }
+      } catch (err) {
+        // invalid token: do not join room
       }
+    });
 
-      if (ownerId) {
-        socket.join(`owner:${ownerId}`);
+    socket.on('join:org', ({ orgId }) => {
+      if (orgId) {
+        socket.join(`org:${orgId}`);
       }
+    });
+
+    socket.on('join:directory', () => {
+      socket.join('directory');
     });
 
     socket.on('leave:ticket', ({ ticketId }) => {
@@ -55,6 +60,25 @@ const initSockets = (io) => {
 
     socket.on('leave:service', ({ serviceId }) => {
       if (serviceId) socket.leave(`service:${serviceId}`);
+    });
+
+    socket.on('leave:owner', ({ token }) => {
+      if (!token) return;
+      try {
+        const secret = process.env.JWT_SECRET || 'queueless_secret';
+        const decoded = jwt.verify(token, secret);
+        if (decoded && decoded.id) {
+          socket.leave(`owner:${decoded.id}`);
+        }
+      } catch (err) {}
+    });
+
+    socket.on('leave:org', ({ orgId }) => {
+      if (orgId) socket.leave(`org:${orgId}`);
+    });
+
+    socket.on('leave:directory', () => {
+      socket.leave('directory');
     });
   });
 

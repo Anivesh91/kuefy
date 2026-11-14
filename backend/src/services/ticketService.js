@@ -130,6 +130,7 @@ const joinQueue = async (serviceId, { name, phone }) => {
   const waitingCount = peopleAhead + 1;
 
   socketEmitter.emitQueueUpdated(serviceId.toString(), org.ownerId.toString(), {
+    organizationId: org._id.toString(),
     waitingCount,
     lastJoinedTicket: {
       ticketNumber,
@@ -287,7 +288,11 @@ const cancelTicket = async (publicToken) => {
   });
 
   const waitingCount = await Ticket.countDocuments({ serviceId, status: 'WAITING' });
-  socketEmitter.emitQueueUpdated(serviceId, ownerId, { waitingCount });
+  const orgIdStr = ticket.organizationId ? (ticket.organizationId._id || ticket.organizationId).toString() : null;
+  socketEmitter.emitQueueUpdated(serviceId, ownerId, {
+    organizationId: orgIdStr,
+    waitingCount,
+  });
   notifyWaitingPositions(serviceId, ticket.serviceId.averageServiceTime);
 
   return { message: 'Ticket cancelled successfully.', ticket };
@@ -343,7 +348,9 @@ const callNextTicket = async (ownerId, serviceId) => {
   });
 
   const waitingCount = await Ticket.countDocuments({ serviceId, status: 'WAITING' });
+  const orgIdStr = service.organizationId ? (service.organizationId._id || service.organizationId).toString() : null;
   socketEmitter.emitQueueUpdated(serviceIdStr, ownerIdStr, {
+    organizationId: orgIdStr,
     waitingCount,
     currentTicket: {
       id: nextTicket._id,
@@ -430,7 +437,11 @@ const completeTicket = async (ownerId, ticketId) => {
   });
 
   const waitingCount = await Ticket.countDocuments({ serviceId: serviceIdStr, status: 'WAITING' });
+  const orgIdStr = ticket.serviceId?.organizationId
+    ? (ticket.serviceId.organizationId._id || ticket.serviceId.organizationId).toString()
+    : null;
   socketEmitter.emitQueueUpdated(serviceIdStr, ownerIdStr, {
+    organizationId: orgIdStr,
     waitingCount,
     currentTicket: null,
   });
@@ -470,9 +481,13 @@ const markNoShowTicket = async (ownerId, ticketId) => {
     noShowAt: ticket.noShowAt,
   });
 
-  const waitingCount = await Ticket.countDocuments({ serviceId: serviceIdStr, status: 'WAITING' });
+  const waitingCountAfterNoShow = await Ticket.countDocuments({ serviceId: serviceIdStr, status: 'WAITING' });
+  const noShowOrgIdStr = ticket.serviceId?.organizationId
+    ? (ticket.serviceId.organizationId._id || ticket.serviceId.organizationId).toString()
+    : null;
   socketEmitter.emitQueueUpdated(serviceIdStr, ownerIdStr, {
-    waitingCount,
+    organizationId: noShowOrgIdStr,
+    waitingCount: waitingCountAfterNoShow,
     currentTicket: null,
   });
 

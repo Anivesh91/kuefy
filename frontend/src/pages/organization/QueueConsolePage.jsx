@@ -57,8 +57,10 @@ export const QueueConsolePage = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleSync = () => {
-      fetchManageData();
+    const handleSync = (payload) => {
+      if (!payload?.serviceId || payload.serviceId === serviceId) {
+        fetchManageData();
+      }
     };
 
     socket.on('queue:updated', handleSync);

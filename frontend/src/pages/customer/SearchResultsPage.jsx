@@ -7,7 +7,7 @@ import { useSocket } from '../../context/SocketContext';
 import { Search, ArrowLeft, Building2, Radio } from 'lucide-react';
 
 export const SearchResultsPage = () => {
-  const { socket } = useSocket();
+  const { socket, joinDirectoryRoom, leaveDirectoryRoom } = useSocket();
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') || '';
   const category = searchParams.get('category') || '';
@@ -16,6 +16,13 @@ export const SearchResultsPage = () => {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [queryInput, setQueryInput] = useState(search);
+
+  useEffect(() => {
+    joinDirectoryRoom();
+    return () => {
+      leaveDirectoryRoom();
+    };
+  }, [joinDirectoryRoom, leaveDirectoryRoom]);
 
   const fetchResults = useCallback(async (isBackground = false) => {
     try {
@@ -58,13 +65,18 @@ export const SearchResultsPage = () => {
       fetchResults(true);
     };
 
+    const handleReconnect = () => {
+      fetchResults(true);
+    };
+
     socket.on('queue:statusChanged', handleQueueStatusChanged);
     socket.on('queue:updated', handleQueueUpdated);
-    socket.on('connect', () => fetchResults(true));
+    socket.on('connect', handleReconnect);
 
     return () => {
       socket.off('queue:statusChanged', handleQueueStatusChanged);
       socket.off('queue:updated', handleQueueUpdated);
+      socket.off('connect', handleReconnect);
     };
   }, [socket, fetchResults]);
 
