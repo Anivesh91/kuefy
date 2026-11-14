@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { Eye, EyeOff, AlertCircle, Volume2 } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Volume2, ShieldCheck } from 'lucide-react';
 
 export const LoginPage = ({ initialMode }) => {
   const navigate = useNavigate();
@@ -34,6 +34,20 @@ export const LoginPage = ({ initialMode }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [chimePlayed, setChimePlayed] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+
+  // Load remembered email on initial mount
+  useEffect(() => {
+    try {
+      const savedEmail = localStorage.getItem('kuefy_remembered_email');
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setRememberMe(true);
+      }
+    } catch {
+      // Ignore localStorage access restrictions
+    }
+  }, []);
 
   // Synthesized Web Audio chime on clicking "Your turn" preview
   const playPreviewChime = () => {
@@ -93,6 +107,15 @@ export const LoginPage = ({ initialMode }) => {
       try {
         setLoading(true);
         await login(email.trim(), password);
+        try {
+          if (rememberMe) {
+            localStorage.setItem('kuefy_remembered_email', email.trim());
+          } else {
+            localStorage.removeItem('kuefy_remembered_email');
+          }
+        } catch {
+          // Ignore localStorage failure
+        }
         navigate('/organization/dashboard');
       } catch (err) {
         setError(err.message || 'Login failed. Please check your credentials.');
@@ -578,12 +601,13 @@ export const LoginPage = ({ initialMode }) => {
                     />
                     <span className="group-hover:text-stone-700 transition-colors">Remember me</span>
                   </label>
-                  <Link
-                    to="/organization/login"
-                    className="text-[#184E38] hover:underline font-medium transition-colors"
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(true)}
+                    className="text-[#184E38] hover:underline font-medium transition-colors cursor-pointer"
                   >
                     Forgot password?
-                  </Link>
+                  </button>
                 </div>
               )}
 
@@ -695,6 +719,50 @@ export const LoginPage = ({ initialMode }) => {
 
       {/* Subtle bottom spacing */}
       <footer className="w-full max-w-7xl mx-auto py-2" />
+
+      {/* Forgot Password / Account Recovery Modal */}
+      <AnimatePresence>
+        {showForgotModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs"
+            onClick={() => setShowForgotModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.94, opacity: 0, y: 12 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.94, opacity: 0, y: 12 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-stone-100 text-[#1C2520]"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#184E38] flex items-center justify-center mb-4">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="font-serif text-2xl font-normal text-[#1A231E]">Password Recovery</h3>
+              <p className="text-xs text-[#59665F] mt-2 leading-relaxed">
+                For security reasons, password resets are processed through organization administrator verification. If you have forgotten your password or lost access, please reach out to:
+              </p>
+              <div className="mt-3.5 p-3 rounded-xl bg-[#FAF8F3] border border-stone-200 text-xs font-mono font-medium text-[#184E38] text-center select-all">
+                support@kuefy.com
+              </div>
+              <p className="text-[11px] text-stone-500 mt-2">
+                Include your registered organization email and name for swift verification.
+              </p>
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="px-5 py-2.5 bg-[#184E38] hover:bg-[#123E2C] text-white text-xs font-medium rounded-xl transition-colors cursor-pointer"
+                >
+                  Understood
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

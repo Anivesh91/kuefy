@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,15 +30,20 @@ export const TicketTrackerPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
-  const [hasTriggeredChime, setHasTriggeredChime] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [audioFeedbackPlaying, setAudioFeedbackPlaying] = useState(false);
 
+  // Deduplication refs to guarantee chime and confetti only fire once per lifecycle event
+  const hasTriggeredChimeRef = useRef(false);
+  const hasCelebratedRef = useRef(false);
+
   // Synthesize pleasant doorbell/airport chime using Web Audio API (0 KB file)
-  const playChime = () => {
+  const playChime = useCallback(() => {
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtxClass) return;
+      const audioCtx = new AudioCtxClass();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
@@ -55,7 +60,25 @@ export const TicketTrackerPage = () => {
     } catch (e) {
       console.warn('Audio chime failed to play:', e);
     }
-  };
+  }, []);
+
+  const triggerCalledChime = useCallback(() => {
+    if (!hasTriggeredChimeRef.current) {
+      hasTriggeredChimeRef.current = true;
+      playChime();
+    }
+  }, [playChime]);
+
+  const triggerCompletedCelebration = useCallback(() => {
+    if (!hasCelebratedRef.current) {
+      hasCelebratedRef.current = true;
+      confetti({
+        particleCount: 100,
+        spread: 80,
+        origin: { y: 0.6 },
+      });
+    }
+  }, []);
 
   const fetchTicket = async () => {
     try {
@@ -64,17 +87,10 @@ export const TicketTrackerPage = () => {
       const data = res?.data;
       setTicketData(data);
 
-      if (data?.ticket?.status === 'CALLED' && !hasTriggeredChime) {
-        playChime();
-        setHasTriggeredChime(true);
-      }
-
-      if (data?.ticket?.status === 'COMPLETED') {
-        confetti({
-          particleCount: 90,
-          spread: 80,
-          origin: { y: 0.6 },
-        });
+      if (data?.ticket?.status === 'CALLED') {
+        triggerCalledChime();
+      } else if (data?.ticket?.status === 'COMPLETED') {
+        triggerCompletedCelebration();
       }
 
       return data;
@@ -109,7 +125,7 @@ export const TicketTrackerPage = () => {
     };
 
     const handleCalled = () => {
-      playChime();
+      triggerCalledChime();
       fetchTicket();
     };
 
@@ -118,11 +134,7 @@ export const TicketTrackerPage = () => {
     };
 
     const handleCompleted = () => {
-      confetti({
-        particleCount: 100,
-        spread: 80,
-        origin: { y: 0.6 },
-      });
+      triggerCompletedCelebration();
       fetchTicket();
     };
 
@@ -156,7 +168,7 @@ export const TicketTrackerPage = () => {
       socket.off('ticket:noShow', handleNoShow);
       socket.off('connect', handleReconnect);
     };
-  }, [socket, ticketData?.ticket?.id, publicToken]);
+  }, [socket, ticketData?.ticket?.id, publicToken, triggerCalledChime, triggerCompletedCelebration]);
 
   const confirmCancelTicket = async () => {
     try {
@@ -180,9 +192,9 @@ export const TicketTrackerPage = () => {
   // Loading State
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-[#F5F2EB] dark:bg-[#080A09] flex flex-col items-center justify-center p-6 text-[#1C2520] dark:text-white transition-colors duration-200">
+      <div className="min-h-screen w-full bg-[#F5F2EB] flex flex-col items-center justify-center p-6 text-[#1C2520] transition-colors duration-200">
         <RisingBallLoader text="Loading your live ticket..." />
-        <p className="text-xs text-[#59665F] dark:text-stone-400 mt-2 font-mono">Connecting to real-time queue dispatcher</p>
+        <p className="text-xs text-[#59665F] mt-2 font-mono">Connecting to real-time queue dispatcher</p>
       </div>
     );
   }
