@@ -15,7 +15,9 @@ import {
   CheckCircle2,
   Hourglass,
   Layers,
+  QrCode,
 } from 'lucide-react';
+import { QrStandeeModal } from '../../components/owner/QrStandeeModal';
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
@@ -26,6 +28,7 @@ export const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [loadingToggle, setLoadingToggle] = useState(null);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -137,13 +140,24 @@ export const DashboardPage = () => {
             </p>
           </div>
 
-          <Link
-            to="/organization/services"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#184E38] hover:bg-[#123E2C] text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Manage Services</span>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setShowQrModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#FAF7F2] dark:bg-stone-800 text-[#184E38] dark:text-[#A7D7BC] border border-[#DED7C9] dark:border-stone-700 hover:border-[#184E38] text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>Counter QR Standee</span>
+            </button>
+
+            <Link
+              to="/organization/services"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#184E38] hover:bg-[#123E2C] text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Manage Services</span>
+            </Link>
+          </div>
         </div>
 
         {error && (
@@ -268,6 +282,13 @@ export const DashboardPage = () => {
           )}
         </div>
       </main>
+
+      {/* Counter QR Standee & Poster Modal */}
+      <QrStandeeModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        organization={organization}
+      />
     </div>
   );
 };

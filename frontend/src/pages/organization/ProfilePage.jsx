@@ -10,7 +10,9 @@ import {
   AlertCircle,
   Copy,
   Sparkles,
+  QrCode,
 } from 'lucide-react';
+import { QrStandeeModal } from '../../components/owner/QrStandeeModal';
 
 const CATEGORIES = [
   { id: 'HOSPITAL_CLINIC', label: 'Hospital & Clinic' },
@@ -36,6 +38,7 @@ export const ProfilePage = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -143,6 +146,14 @@ export const ProfilePage = () => {
               >
                 <Copy className="w-3.5 h-3.5" />
                 <span>{copiedLink ? 'Copied!' : 'Copy Link'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowQrModal(true)}
+                className="px-3.5 py-2 text-xs font-semibold text-[#184E38] dark:text-[#A7D7BC] bg-white dark:bg-stone-800 border border-[#C5DCCF]/70 dark:border-[#2D5A43] rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
+              >
+                <QrCode className="w-3.5 h-3.5" />
+                <span>Print Standee</span>
               </button>
               <a
                 href={publicUrl}
@@ -258,6 +269,13 @@ export const ProfilePage = () => {
           </form>
         </div>
       </main>
+
+      {/* Counter QR Standee & Poster Modal */}
+      <QrStandeeModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        organization={organization}
+      />
     </div>
   );
 };

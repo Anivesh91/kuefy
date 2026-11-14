@@ -8,7 +8,8 @@ import { QueueControlPanel } from '../../components/owner/QueueControlPanel';
 import { WaitingCustomerList } from '../../components/owner/WaitingCustomerList';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { useSocket } from '../../context/SocketContext';
-import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, QrCode } from 'lucide-react';
+import { QrStandeeModal } from '../../components/owner/QrStandeeModal';
 
 export const QueueConsolePage = () => {
   const { serviceId } = useParams();
@@ -22,6 +23,7 @@ export const QueueConsolePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const fetchManageData = async () => {
     try {
@@ -184,14 +186,27 @@ export const QueueConsolePage = () => {
       <Sidebar organization={organization} />
 
       <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-6xl">
-        {/* Navigation Breadcrumb */}
-        <Link
-          to="/organization/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#59665F] dark:text-stone-400 hover:text-[#184E38] dark:hover:text-[#A7D7BC] mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Command Dashboard</span>
-        </Link>
+        {/* Navigation Breadcrumb & Actions */}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <Link
+            to="/organization/dashboard"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#59665F] dark:text-stone-400 hover:text-[#184E38] dark:hover:text-[#A7D7BC] transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Command Dashboard</span>
+          </Link>
+
+          {organization && (
+            <button
+              type="button"
+              onClick={() => setShowQrModal(true)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#FAF7F2] dark:bg-stone-800 text-[#184E38] dark:text-[#A7D7BC] border border-[#DED7C9] dark:border-stone-700 hover:border-[#184E38] text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span>Counter QR Standee</span>
+            </button>
+          )}
+        </div>
 
         {/* Live Operational Console */}
         <div className="space-y-8">
@@ -217,6 +232,13 @@ export const QueueConsolePage = () => {
           </div>
         </div>
       </main>
+
+      {/* Counter QR Standee & Poster Modal */}
+      <QrStandeeModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        organization={organization}
+      />
     </div>
   );
 };
