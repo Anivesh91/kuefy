@@ -38,6 +38,21 @@ const markNoShow = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, { ticket }, 'Ticket marked as no-show'));
 });
 
+const getVapidPublicKey = asyncHandler(async (req, res) => {
+  const { getPublicKey } = require('../config/webPush');
+  res.status(200).json(new ApiResponse(200, { publicKey: getPublicKey() }, 'VAPID public key fetched'));
+});
+
+const subscribePush = asyncHandler(async (req, res) => {
+  const { publicToken } = req.params;
+  const { subscription } = req.body;
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json(new ApiResponse(400, null, 'Valid push subscription object is required.'));
+  }
+  await ticketService.savePushSubscription(publicToken, subscription);
+  res.status(200).json(new ApiResponse(200, { success: true }, 'Push subscription saved successfully.'));
+});
+
 module.exports = {
   trackTicket,
   lookupTickets,
@@ -45,4 +60,6 @@ module.exports = {
   startServing,
   completeTicket,
   markNoShow,
+  getVapidPublicKey,
+  subscribePush,
 };

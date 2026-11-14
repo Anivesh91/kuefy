@@ -6,6 +6,7 @@ import { ticketApi } from '../../api/ticketApi';
 import { useSocket } from '../../context/SocketContext';
 import { RisingBallLoader } from '@/components/ui/rising-ball';
 import {
+  Bell,
   BellRing,
   Clock,
   CheckCircle2,
@@ -21,6 +22,11 @@ import {
   Building2,
   X,
 } from 'lucide-react';
+import {
+  isPushSupported,
+  getNotificationPermission,
+  registerPushForTicket,
+} from '../../utils/pushNotification';
 
 export const TicketTrackerPage = () => {
   const { publicToken } = useParams();
@@ -33,6 +39,46 @@ export const TicketTrackerPage = () => {
   const [copiedLink, setCopiedLink] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [audioFeedbackPlaying, setAudioFeedbackPlaying] = useState(false);
+  const [pushStatus, setPushStatus] = useState('unsubscribed'); // 'unsubscribed' | 'subscribed' | 'blocked' | 'unsupported'
+  const [pushLoading, setPushLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isPushSupported()) {
+      setPushStatus('unsupported');
+      return;
+    }
+    const perm = getNotificationPermission();
+    if (perm === 'granted') {
+      navigator.serviceWorker?.ready
+        ?.then((reg) => reg.pushManager.getSubscription())
+        ?.then((sub) => {
+          if (sub) setPushStatus('subscribed');
+          else setPushStatus('unsubscribed');
+        })
+        ?.catch(() => setPushStatus('unsubscribed'));
+    } else if (perm === 'denied') {
+      setPushStatus('blocked');
+    } else {
+      setPushStatus('unsubscribed');
+    }
+  }, []);
+
+  const handleEnablePush = async () => {
+    try {
+      setPushLoading(true);
+      await registerPushForTicket(publicToken);
+      setPushStatus('subscribed');
+    } catch (err) {
+      console.warn('Push registration error:', err.message);
+      if (getNotificationPermission() === 'denied') {
+        setPushStatus('blocked');
+      } else {
+        alert(err.message || 'Could not enable lock-screen notifications.');
+      }
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   // Deduplication refs to guarantee chime and confetti only fire once per lifecycle event
   const hasTriggeredChimeRef = useRef(false);
@@ -586,6 +632,55 @@ export const TicketTrackerPage = () => {
           <div className="p-6 sm:p-8 space-y-6 bg-white">
             {status === 'WAITING' && (
               <>
+                {/* Lock-Screen Native Web Push Notification Banner */}
+                {pushStatus === 'subscribed' && (
+                  <div className="flex items-center gap-3 p-3.5 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl text-emerald-900 text-xs shadow-2xs">
+                    <div className="p-2 bg-[#184E38] text-white rounded-xl shadow-2xs shrink-0">
+                      <BellRing className="w-4 h-4 text-emerald-300" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-bold text-[#141E18]">Lock-Screen Alerts Active</div>
+                      <div className="text-[11px] text-[#4D5E53]">
+                        Phone lock hone par bhi screen par turn alert popup aayega.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {pushStatus === 'unsubscribed' && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#FAF7F2] border border-[#E5DEC9] rounded-2xl shadow-2xs">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-[#184E38] text-white rounded-xl shadow-xs shrink-0 mt-0.5">
+                        <Bell className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-[#141E18]">
+                          Never miss your turn
+                        </div>
+                        <div className="text-[11px] text-[#59665F]">
+                          Phone lock hone par bhi native alert aur vibration paane ke liye enable karein.
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleEnablePush}
+                      disabled={pushLoading}
+                      className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#184E38] hover:bg-[#123E2C] text-white text-xs font-semibold rounded-xl shadow-xs transition-all active:scale-95 shrink-0 cursor-pointer"
+                    >
+                      <BellRing className="w-3.5 h-3.5" />
+                      <span>{pushLoading ? 'Enabling...' : 'Enable Alerts'}</span>
+                    </button>
+                  </div>
+                )}
+
+                {pushStatus === 'blocked' && (
+                  <div className="flex items-center gap-2 p-3 bg-amber-50/70 border border-amber-200/70 rounded-xl text-amber-900 text-[11px]">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Notifications are blocked in your browser. Keep this tab open to hear the audio chime.</span>
+                  </div>
+                )}
+
                 {/* 2-Column Gauge Box */}
                 <div className="grid grid-cols-2 gap-3.5">
                   {/* Position in Line */}

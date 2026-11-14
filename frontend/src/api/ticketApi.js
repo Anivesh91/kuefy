@@ -7,4 +7,7 @@ export const ticketApi = {
   start: (ticketId) => apiClient.post(`/tickets/${ticketId}/start`),
   complete: (ticketId) => apiClient.post(`/tickets/${ticketId}/complete`),
   markNoShow: (ticketId) => apiClient.post(`/tickets/${ticketId}/no-show`),
+  getVapidPublicKey: () => apiClient.get('/tickets/push/vapid-public-key'),
+  subscribePush: (publicToken, subscription) =>
+    apiClient.post(`/tickets/${publicToken}/subscribe-push`, { subscription }),
 };

@@ -6,6 +6,7 @@ const ApiError = require('../utils/apiError');
 const { generatePublicToken, formatTicketNumber } = require('../utils/tokenGenerator');
 const { normalizePhone } = require('../utils/phoneNormalizer');
 const socketEmitter = require('../sockets/socketEmitter');
+const { sendPush } = require('../config/webPush');
 const {
   pushWaitingTicket,
   popNextWaitingTicket,
@@ -404,6 +405,18 @@ const callNextTicket = async (ownerId, serviceId) => {
 
     notifyWaitingPositions(serviceId, service.averageServiceTime);
 
+    // Send background lock-screen Web Push notification if customer registered a subscription
+    if (nextTicket.pushSubscription) {
+      sendPush(nextTicket.pushSubscription, {
+        title: 'Kuefy: Your Turn is Up!',
+        body: `Ticket #${nextTicket.ticketNumber} is now being called for ${service.name}. Please proceed to the counter!`,
+        url: `/customer/ticket/${nextTicket.publicToken}`,
+        tag: `turn-${nextTicket.ticketNumber}`,
+      }).catch((err) => {
+        console.warn(`[Push Delivery Failed] ${err.message}`);
+      });
+    }
+
     return {
       ticket: nextTicket,
       queue: lockedQueue,
@@ -538,6 +551,16 @@ const markNoShowTicket = async (ownerId, ticketId) => {
   return ticket;
 };
 
+const savePushSubscription = async (publicToken, subscription) => {
+  const ticket = await Ticket.findOne({ publicToken });
+  if (!ticket) {
+    throw new ApiError(404, 'Ticket not found.');
+  }
+  ticket.pushSubscription = subscription;
+  await ticket.save();
+  return { success: true };
+};
+
 module.exports = {
   joinQueue,
   lookupActiveTicketsByPhone,
@@ -547,4 +570,5 @@ module.exports = {
   startServingTicket,
   completeTicket,
   markNoShowTicket,
+  savePushSubscription,
 };

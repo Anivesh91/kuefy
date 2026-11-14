@@ -86,6 +86,10 @@ const ticketSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    pushSubscription: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   },
   {
     timestamps: true,
