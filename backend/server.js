@@ -5,6 +5,7 @@ const app = require('./src/app');
 const connectDB = require('./src/config/db');
 const { initRedis } = require('./src/config/redis');
 const { initSockets } = require('./src/sockets/socketHandler');
+const { isOriginAllowed } = require('./src/config/cors');
 
 const PORT = process.env.PORT || 5000;
 
@@ -13,16 +14,10 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
-      const allowedOrigins = [
-        process.env.CLIENT_URL || 'http://localhost:5173',
-        'http://localhost:5173',
-        'http://localhost:3000',
-        'http://127.0.0.1:5173',
-      ];
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (isOriginAllowed(origin)) {
         return callback(null, true);
       }
-      return callback(null, true);
+      return callback(new Error(`Origin ${origin} is not allowed by CORS.`));
     },
     methods: ['GET', 'POST'],
     credentials: true,

@@ -12,6 +12,15 @@ const loginValidator = [
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
+const googleAuthValidator = [
+  body().custom((value, { req }) => {
+    if (!req.body || (!req.body.credential && !req.body.accessToken)) {
+      throw new Error('Either Google credential (ID token) or accessToken must be provided');
+    }
+    return true;
+  }),
+];
+
 const createOrgValidator = [
   body('name').trim().notEmpty().withMessage('Organization name is required').isLength({ max: 120 }),
   body('category').optional().isIn(Organization.CATEGORIES).withMessage('Invalid organization category'),
@@ -88,6 +97,7 @@ const mongoIdParamValidator = (paramName) => [
 module.exports = {
   registerValidator,
   loginValidator,
+  googleAuthValidator,
   createOrgValidator,
   updateOrgValidator,
   createServiceValidator,

@@ -19,6 +19,10 @@ const protectOwner = async (req, res, next) => {
       throw new ApiError(401, 'Authentication required. Please log in.');
     }
 
+    if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+      throw new ApiError(500, 'JWT_SECRET environment variable is required in production.');
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'queueless_secret');
     const user = await User.findById(decoded.id);
 

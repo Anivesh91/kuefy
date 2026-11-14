@@ -6,32 +6,32 @@ const ApiError = require('../utils/apiError');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateToken = (userId) => {
+  if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+    throw new ApiError(500, 'JWT_SECRET environment variable is required in production.');
+  }
   return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'queueless_secret', {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 };
 
 const verifyGoogleToken = async (idToken) => {
-  try {
-    if (process.env.GOOGLE_CLIENT_ID) {
-      const ticket = await googleClient.verifyIdToken({
-        idToken,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-      return ticket.getPayload();
-    }
-  } catch (err) {
-    console.warn('Google client verification warning:', err.message);
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    throw new ApiError(500, 'Google Authentication is not configured on the server (GOOGLE_CLIENT_ID missing).');
   }
 
-  // Fallback JWT payload decoder if GOOGLE_CLIENT_ID is not configured in environment
   try {
-    const base64Url = idToken.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = Buffer.from(base64, 'base64').toString('utf-8');
-    return JSON.parse(jsonPayload);
-  } catch (decodeErr) {
-    throw new ApiError(401, 'Invalid Google ID token.');
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      throw new ApiError(401, 'Invalid Google ID token payload.');
+    }
+    return payload;
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    throw new ApiError(401, 'Invalid or expired Google ID token: ' + err.message);
   }
 };
 
@@ -104,6 +104,10 @@ const loginOwner = async ({ email, password }) => {
 };
 
 const googleAuthOwner = async ({ credential, accessToken } = {}) => {
+  if (!credential && !accessToken) {
+    throw new ApiError(400, 'Either Google credential (ID token) or accessToken is required.');
+  }
+
   let payload = null;
 
   if (credential) {

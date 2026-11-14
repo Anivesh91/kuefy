@@ -3,11 +3,11 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const { protectOwner } = require('../middlewares/authMiddleware');
 const validate = require('../middlewares/validationMiddleware');
-const { registerValidator, loginValidator } = require('../validators/schemas');
+const { registerValidator, loginValidator, googleAuthValidator } = require('../validators/schemas');
 
 router.post('/register', registerValidator, validate, authController.register);
 router.post('/login', loginValidator, validate, authController.login);
-router.post('/google', authController.googleAuth);
+router.post('/google', googleAuthValidator, validate, authController.googleAuth);
 router.post('/logout', protectOwner, authController.logout);
 router.get('/me', protectOwner, authController.getMe);
 

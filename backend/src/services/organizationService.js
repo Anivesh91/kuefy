@@ -3,6 +3,10 @@ const Service = require('../models/Service');
 const Queue = require('../models/Queue');
 const ApiError = require('../utils/apiError');
 
+const escapeRegex = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 const searchOrganizations = async ({ search, category, city }) => {
   const query = { isActive: true };
 
@@ -10,12 +14,14 @@ const searchOrganizations = async ({ search, category, city }) => {
     query.category = category;
   }
 
-  if (city) {
-    query.city = { $regex: new RegExp(city.trim(), 'i') };
+  if (city && city.trim()) {
+    const escapedCity = escapeRegex(city.trim());
+    query.city = { $regex: new RegExp(escapedCity, 'i') };
   }
 
-  if (search) {
-    const searchRegex = new RegExp(search.trim(), 'i');
+  if (search && search.trim()) {
+    const escapedSearch = escapeRegex(search.trim());
+    const searchRegex = new RegExp(escapedSearch, 'i');
     query.$or = [
       { name: searchRegex },
       { description: searchRegex },

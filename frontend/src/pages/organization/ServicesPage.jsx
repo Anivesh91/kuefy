@@ -84,6 +84,11 @@ export const ServicesPage = () => {
     e.preventDefault();
     setModalError('');
 
+    if (!organization?._id) {
+      setModalError('Organization details not loaded. Please refresh the page.');
+      return;
+    }
+
     if (!formData.name.trim()) {
       setModalError('Service name is required.');
       return;
@@ -95,7 +100,7 @@ export const ServicesPage = () => {
 
     try {
       setModalLoading(true);
-      await serviceApi.create({
+      await serviceApi.create(organization._id, {
         name: formData.name.trim(),
         ticketPrefix: formData.ticketPrefix.trim().toUpperCase(),
         averageServiceTime: Number(formData.averageServiceTime) || 10,
