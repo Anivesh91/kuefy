@@ -40,6 +40,12 @@ const callNext = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, result, 'Next customer called successfully'));
 });
 
+const resetSequence = asyncHandler(async (req, res) => {
+  const { serviceId } = req.params;
+  const queue = await queueService.resetQueueSequence(req.user._id, serviceId);
+  res.status(200).json(new ApiResponse(200, { queue }, 'Queue sequence reset successfully to #001 for a new day.'));
+});
+
 module.exports = {
   getPublicQueue,
   joinQueue,
@@ -47,4 +53,5 @@ module.exports = {
   openQueue,
   closeQueue,
   callNext,
+  resetSequence,
 };

@@ -85,6 +85,26 @@ const getNextSequence = async (serviceId, initialSeq = 0) => {
 };
 
 /**
+ * Reset the sequence counter in Redis (e.g. for a new day or manual reset)
+ */
+const resetSequence = async (serviceId, initialSeq = 0) => {
+  if (!isRedisReady()) return null;
+  try {
+    const client = getRedisClient();
+    const key = `queue:${serviceId}:sequence`;
+    if (initialSeq === 0) {
+      await client.del(key);
+    } else {
+      await client.set(key, initialSeq);
+    }
+    return true;
+  } catch (error) {
+    console.warn(`[Redis resetSequence Warning] ${error.message}`);
+    return null;
+  }
+};
+
+/**
  * Get current waiting queue length
  */
 const getWaitingCount = async (serviceId) => {
@@ -106,5 +126,6 @@ module.exports = {
   removeWaitingTicket,
   clearWaitingQueue,
   getNextSequence,
+  resetSequence,
   getWaitingCount,
 };

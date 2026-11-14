@@ -3,7 +3,7 @@ const Service = require('../models/Service');
 const Ticket = require('../models/Ticket');
 const ApiError = require('../utils/apiError');
 const socketEmitter = require('../sockets/socketEmitter');
-const { getWaitingCount, clearWaitingQueue, pushWaitingTicket } = require('../redis/queueRedis');
+const { getWaitingCount, clearWaitingQueue, pushWaitingTicket, resetSequence } = require('../redis/queueRedis');
 
 const getPublicQueue = async (serviceId) => {
   const service = await Service.findById(serviceId).populate('organizationId', 'name slug category').lean();
@@ -135,6 +135,16 @@ const openQueue = async (ownerId, serviceId) => {
     updateFields.currentTicketId = null;
   }
 
+  // Automatic daily reset: if opening on a fresh calendar day with no active ticket carried over
+  const now = new Date();
+  const lastReset = existingQueue?.lastResetDate ? new Date(existingQueue.lastResetDate) : null;
+  const isDifferentDay = !lastReset || lastReset.toDateString() !== now.toDateString();
+  if (isDifferentDay && !keepCurrentTicket) {
+    updateFields.lastSequenceNumber = 0;
+    updateFields.lastResetDate = now;
+    await resetSequence(serviceId, 0);
+  }
+
   const queue = await Queue.findOneAndUpdate(
     { serviceId },
     { $set: updateFields },
@@ -224,9 +234,56 @@ const closeQueue = async (ownerId, serviceId) => {
   return queue;
 };
 
+const resetQueueSequence = async (ownerId, serviceId) => {
+  const service = await Service.findById(serviceId).populate('organizationId');
+  if (!service) {
+    throw new ApiError(404, 'Service not found.');
+  }
+
+  if (service.organizationId.ownerId.toString() !== ownerId.toString()) {
+    throw new ApiError(403, 'Forbidden: You do not own this service queue.');
+  }
+
+  const existingQueue = await Queue.findOne({ serviceId });
+  if (!existingQueue) {
+    throw new ApiError(404, 'Queue not found.');
+  }
+
+  // Clear Redis sequence key and reset MongoDB sequence counter to 0
+  await resetSequence(serviceId, 0);
+
+  const updatedQueue = await Queue.findOneAndUpdate(
+    { serviceId },
+    {
+      $set: {
+        lastSequenceNumber: 0,
+        lastResetDate: new Date(),
+      },
+    },
+    { new: true }
+  );
+
+  const waitingCount = await Ticket.countDocuments({
+    serviceId,
+    status: 'WAITING',
+  });
+  const orgId = service.organizationId._id || service.organizationId;
+
+  socketEmitter.emitQueueUpdated(serviceId, ownerId, {
+    status: updatedQueue.status,
+    waitingCount,
+    lastSequenceNumber: 0,
+    serviceId: serviceId.toString(),
+    organizationId: orgId.toString(),
+  });
+
+  return updatedQueue;
+};
+
 module.exports = {
   getPublicQueue,
   getManageQueue,
   openQueue,
   closeQueue,
+  resetQueueSequence,
 };

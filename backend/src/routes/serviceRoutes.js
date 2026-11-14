@@ -20,5 +20,6 @@ router.get('/:serviceId/queue/manage', protectOwner, mongoIdParamValidator('serv
 router.post('/:serviceId/queue/open', protectOwner, mongoIdParamValidator('serviceId'), validate, queueController.openQueue);
 router.post('/:serviceId/queue/close', protectOwner, mongoIdParamValidator('serviceId'), validate, queueController.closeQueue);
 router.post('/:serviceId/queue/call-next', protectOwner, mongoIdParamValidator('serviceId'), validate, queueController.callNext);
+router.post('/:serviceId/queue/reset-sequence', protectOwner, mongoIdParamValidator('serviceId'), validate, queueController.resetSequence);
 
 module.exports = router;

@@ -7,4 +7,5 @@ export const queueApi = {
   open: (serviceId) => apiClient.post(`/services/${serviceId}/queue/open`),
   close: (serviceId) => apiClient.post(`/services/${serviceId}/queue/close`),
   callNext: (serviceId) => apiClient.post(`/services/${serviceId}/queue/call-next`),
+  resetSequence: (serviceId) => apiClient.post(`/services/${serviceId}/queue/reset-sequence`),
 };

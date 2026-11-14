@@ -11,6 +11,7 @@ import {
   User,
   Clock,
   AlertCircle,
+  RotateCcw,
 } from 'lucide-react';
 
 export const QueueControlPanel = ({
@@ -19,6 +20,7 @@ export const QueueControlPanel = ({
   currentTicket,
   waitingCount,
   onToggleQueue,
+  onResetSequence,
   onCallNext,
   onStartServing,
   onComplete,
@@ -49,25 +51,39 @@ export const QueueControlPanel = ({
           </p>
         </div>
 
-        <Button
-          variant={isOpen ? 'danger' : 'primary'}
-          size="md"
-          loading={actionLoading === 'toggleQueue'}
-          onClick={onToggleQueue}
-          className="shrink-0"
-        >
-          {isOpen ? (
-            <>
-              <ToggleRight className="w-4 h-4" />
-              <span>Close Queue</span>
-            </>
-          ) : (
-            <>
-              <ToggleLeft className="w-4 h-4" />
-              <span>Open Queue</span>
-            </>
-          )}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <Button
+            variant="outline"
+            size="md"
+            loading={actionLoading === 'resetSequence'}
+            onClick={onResetSequence}
+            className="text-stone-700 dark:text-stone-200 hover:text-[#184E38] dark:hover:text-[#A7D7BC]"
+            title={`Reset ticket counter to #${service?.ticketPrefix || 'A'}-001`}
+          >
+            <RotateCcw className="w-4 h-4 mr-1.5" />
+            <span>Reset for New Day (#{service?.ticketPrefix || 'A'}-001)</span>
+          </Button>
+
+          <Button
+            variant={isOpen ? 'danger' : 'primary'}
+            size="md"
+            loading={actionLoading === 'toggleQueue'}
+            onClick={onToggleQueue}
+            className="shrink-0"
+          >
+            {isOpen ? (
+              <>
+                <ToggleRight className="w-4 h-4" />
+                <span>Close Queue</span>
+              </>
+            ) : (
+              <>
+                <ToggleLeft className="w-4 h-4" />
+                <span>Open Queue</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Active Operational Station Card */}

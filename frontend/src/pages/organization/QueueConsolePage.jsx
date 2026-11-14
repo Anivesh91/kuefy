@@ -101,6 +101,25 @@ export const QueueConsolePage = () => {
     }
   };
 
+  const handleResetSequence = async () => {
+    const prefix = service?.ticketPrefix || 'A';
+    const confirmMsg =
+      `Are you sure you want to reset the ticket sequence for ${service?.name || 'this service'} to #${prefix}-001?\n\n` +
+      `• All existing completed customer records remain safely stored in history.\n` +
+      `• The next guest who joins will receive ticket #${prefix}-001 for today.`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setActionLoading('resetSequence');
+      await queueApi.resetSequence(serviceId);
+      await fetchManageData();
+    } catch (err) {
+      alert(err.message || 'Failed to reset queue sequence.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleCallNext = async () => {
     try {
       setActionLoading('callNext');
@@ -216,6 +235,7 @@ export const QueueConsolePage = () => {
             currentTicket={currentTicket}
             waitingCount={waitingTickets.length}
             onToggleQueue={handleToggleQueue}
+            onResetSequence={handleResetSequence}
             onCallNext={handleCallNext}
             onStartServing={handleStartServing}
             onComplete={handleComplete}
