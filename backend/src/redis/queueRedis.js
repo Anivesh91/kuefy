@@ -72,10 +72,9 @@ const getNextSequence = async (serviceId, initialSeq = 0) => {
   try {
     const client = getRedisClient();
     const key = `queue:${serviceId}:sequence`;
-    // If key does not exist yet, set it to initialSeq first
-    const exists = await client.exists(key);
-    if (!exists && initialSeq > 0) {
-      await client.set(key, initialSeq);
+    if (initialSeq > 0) {
+      // Atomically set initial sequence ONLY if key does not exist yet (no race condition)
+      await client.set(key, initialSeq, 'NX');
     }
     const nextSeq = await client.incr(key);
     return nextSeq;

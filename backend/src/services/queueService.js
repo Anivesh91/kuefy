@@ -3,7 +3,7 @@ const Service = require('../models/Service');
 const Ticket = require('../models/Ticket');
 const ApiError = require('../utils/apiError');
 const socketEmitter = require('../sockets/socketEmitter');
-const { getWaitingCount, clearWaitingQueue } = require('../redis/queueRedis');
+const { getWaitingCount, clearWaitingQueue, pushWaitingTicket } = require('../redis/queueRedis');
 
 const getPublicQueue = async (serviceId) => {
   const service = await Service.findById(serviceId).populate('organizationId', 'name slug category').lean();
@@ -107,19 +107,41 @@ const openQueue = async (ownerId, serviceId) => {
     throw new ApiError(403, 'Forbidden: You do not own this service queue.');
   }
 
+  // Preserve existing currentTicketId if it is actively CALLED or SERVING
+  const existingQueue = await Queue.findOne({ serviceId });
+  let keepCurrentTicket = false;
+  if (existingQueue && existingQueue.currentTicketId) {
+    const activeCurrent = await Ticket.findById(existingQueue.currentTicketId);
+    if (activeCurrent && ['CALLED', 'SERVING'].includes(activeCurrent.status)) {
+      keepCurrentTicket = true;
+    }
+  }
+
+  // Resynchronize Redis waiting queue with MongoDB source of truth
   await clearWaitingQueue(serviceId);
+  const waitingTickets = await Ticket.find({ serviceId, status: 'WAITING' })
+    .sort({ sequenceNumber: 1 })
+    .select('_id');
+
+  for (const t of waitingTickets) {
+    await pushWaitingTicket(serviceId, t._id);
+  }
+
+  const updateFields = {
+    status: 'OPEN',
+    openedAt: existingQueue?.openedAt || new Date(),
+  };
+  if (!keepCurrentTicket) {
+    updateFields.currentTicketId = null;
+  }
 
   const queue = await Queue.findOneAndUpdate(
     { serviceId },
-    {
-      status: 'OPEN',
-      openedAt: new Date(),
-      currentTicketId: null,
-    },
+    { $set: updateFields },
     { new: true, upsert: true }
   );
 
-  const waitingCount = await Ticket.countDocuments({ serviceId, status: 'WAITING' });
+  const waitingCount = waitingTickets.length;
   const orgId = service.organizationId._id || service.organizationId;
 
   socketEmitter.emitQueueStatusChanged(serviceId, ownerId, {

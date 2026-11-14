@@ -30,6 +30,10 @@ const queueSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    dispatchLock: {
+      type: Date,
+      default: null,
+    },
     openedAt: {
       type: Date,
       default: null,

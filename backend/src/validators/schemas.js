@@ -86,6 +86,15 @@ const joinQueueValidator = [
     .withMessage('Phone number must be between 7 and 20 digits'),
 ];
 
+const lookupTicketsValidator = [
+  query('phone')
+    .trim()
+    .notEmpty()
+    .withMessage('Phone number is required')
+    .isLength({ min: 7, max: 20 })
+    .withMessage('Phone number must be between 7 and 20 digits'),
+];
+
 const publicTokenValidator = [
   param('publicToken').trim().notEmpty().withMessage('Public ticket token is required'),
 ];
@@ -103,6 +112,7 @@ module.exports = {
   createServiceValidator,
   updateServiceValidator,
   joinQueueValidator,
+  lookupTicketsValidator,
   publicTokenValidator,
   mongoIdParamValidator,
 };

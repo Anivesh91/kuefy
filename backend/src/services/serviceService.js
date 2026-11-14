@@ -1,7 +1,10 @@
 const Service = require('../models/Service');
 const Organization = require('../models/Organization');
 const Queue = require('../models/Queue');
+const Ticket = require('../models/Ticket');
 const ApiError = require('../utils/apiError');
+const socketEmitter = require('../sockets/socketEmitter');
+const { clearWaitingQueue } = require('../redis/queueRedis');
 
 const getOrganizationServices = async (organizationId, includeInactive = false) => {
   const query = { organizationId };
@@ -129,12 +132,59 @@ const deactivateService = async (ownerId, serviceId) => {
   service.isActive = false;
   await service.save();
 
+  const now = new Date();
+
+  // Cancel any active tickets in this deactivated service
+  const activeTickets = await Ticket.find({
+    serviceId: service._id,
+    status: { $in: ['WAITING', 'CALLED', 'SERVING'] },
+  });
+
+  if (activeTickets.length > 0) {
+    await Ticket.updateMany(
+      {
+        serviceId: service._id,
+        status: { $in: ['WAITING', 'CALLED', 'SERVING'] },
+      },
+      {
+        status: 'CANCELLED',
+        cancelledAt: now,
+      }
+    );
+  }
+
+  await clearWaitingQueue(service._id);
+
   const queue = await Queue.findOne({ serviceId: service._id });
   if (queue) {
     queue.status = 'CLOSED';
-    queue.closedAt = new Date();
+    queue.currentTicketId = null;
+    queue.closedAt = now;
     await queue.save();
   }
+
+  const orgId = service.organizationId._id || service.organizationId;
+  const ownerIdStr = ownerId.toString();
+  const serviceIdStr = service._id.toString();
+
+  for (const t of activeTickets) {
+    socketEmitter.emitTicketCancelled(t._id.toString(), serviceIdStr, ownerIdStr, {
+      ticketNumber: t.ticketNumber,
+      message: 'Service has been deactivated by the organization.',
+    });
+  }
+
+  socketEmitter.emitQueueStatusChanged(serviceIdStr, ownerIdStr, {
+    status: 'CLOSED',
+    serviceId: serviceIdStr,
+    organizationId: orgId.toString(),
+  });
+  socketEmitter.emitQueueUpdated(serviceIdStr, ownerIdStr, {
+    status: 'CLOSED',
+    waitingCount: 0,
+    serviceId: serviceIdStr,
+    organizationId: orgId.toString(),
+  });
 
   return { message: 'Service successfully deactivated.', service };
 };

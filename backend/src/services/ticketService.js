@@ -4,6 +4,7 @@ const Service = require('../models/Service');
 const Organization = require('../models/Organization');
 const ApiError = require('../utils/apiError');
 const { generatePublicToken, formatTicketNumber } = require('../utils/tokenGenerator');
+const { normalizePhone } = require('../utils/phoneNormalizer');
 const socketEmitter = require('../sockets/socketEmitter');
 const {
   pushWaitingTicket,
@@ -43,13 +44,17 @@ const joinQueue = async (serviceId, { name, phone }) => {
     throw new ApiError(404, 'Organization is currently inactive.');
   }
 
-  const cleanPhone = phone.trim();
+  const cleanPhone = normalizePhone(phone);
+  const rawPhone = phone.trim();
   const cleanName = name.trim();
 
   // Return existing active ticket if customer rejoins
   const existingActiveTicket = await Ticket.findOne({
     serviceId,
-    customerPhone: cleanPhone,
+    $or: [
+      { customerPhone: cleanPhone },
+      { customerPhone: rawPhone },
+    ],
     status: { $in: ['WAITING', 'CALLED', 'SERVING'] },
   });
 
@@ -100,7 +105,7 @@ const joinQueue = async (serviceId, { name, phone }) => {
     );
     sequenceNumber = updatedQueue.lastSequenceNumber;
   } else {
-    await Queue.updateOne({ serviceId }, { lastSequenceNumber: sequenceNumber });
+    await Queue.updateOne({ serviceId }, { $max: { lastSequenceNumber: sequenceNumber } });
   }
 
   const ticketNumber = formatTicketNumber(service.ticketPrefix, sequenceNumber);
@@ -114,7 +119,7 @@ const joinQueue = async (serviceId, { name, phone }) => {
     serviceId: service._id,
     queueId: queue._id,
     customerName: cleanName,
-    customerPhone: cleanPhone,
+    customerPhone: cleanPhone || rawPhone,
     status: 'WAITING',
     joinedAt: new Date(),
   });
@@ -159,13 +164,17 @@ const joinQueue = async (serviceId, { name, phone }) => {
 };
 
 const lookupActiveTicketsByPhone = async (phone) => {
-  if (!phone || phone.trim().length < 4) {
-    throw new ApiError(400, 'Please provide a valid phone number.');
+  const cleanPhone = normalizePhone(phone);
+  const rawPhone = (phone || '').trim();
+  if ((!cleanPhone || cleanPhone.length < 7) && rawPhone.length < 7) {
+    throw new ApiError(400, 'Please provide a valid phone number (minimum 7 digits).');
   }
 
-  const cleanPhone = phone.trim();
   const activeTickets = await Ticket.find({
-    customerPhone: cleanPhone,
+    $or: [
+      { customerPhone: cleanPhone },
+      { customerPhone: rawPhone },
+    ],
     status: { $in: ['WAITING', 'CALLED', 'SERVING'] },
   })
     .populate('serviceId', 'name ticketPrefix averageServiceTime')
@@ -323,52 +332,87 @@ const callNextTicket = async (ownerId, serviceId) => {
     }
   }
 
-  const nextTicket = await Ticket.findOneAndUpdate(
-    { serviceId, status: 'WAITING' },
-    { status: 'CALLED', calledAt: new Date() },
-    { sort: { sequenceNumber: 1 }, new: true }
+  // Atomically acquire a dispatch lock on Queue to prevent concurrent callNext races (10s expiry)
+  const lockedQueue = await Queue.findOneAndUpdate(
+    {
+      serviceId,
+      $or: [
+        { dispatchLock: null },
+        { dispatchLock: { $lt: new Date(Date.now() - 10000) } },
+      ],
+    },
+    { dispatchLock: new Date() },
+    { new: true }
   );
 
-  if (!nextTicket) {
-    throw new ApiError(409, 'No customers are currently waiting in the queue.');
+  if (!lockedQueue) {
+    throw new ApiError(409, 'A ticket call operation is currently in progress. Please wait a moment.');
   }
 
-  queue.currentTicketId = nextTicket._id;
-  await queue.save();
+  try {
+    // Re-verify current ticket under lock
+    if (lockedQueue.currentTicketId) {
+      const activeCurrent = await Ticket.findById(lockedQueue.currentTicketId);
+      if (activeCurrent && ['CALLED', 'SERVING'].includes(activeCurrent.status)) {
+        throw new ApiError(
+          409,
+          `Cannot call next ticket while ticket ${activeCurrent.ticketNumber} is currently ${activeCurrent.status}. Complete or mark it as No-Show first.`
+        );
+      }
+    }
 
-  await popNextWaitingTicket(serviceId);
+    const nextTicket = await Ticket.findOneAndUpdate(
+      { serviceId, status: 'WAITING' },
+      { status: 'CALLED', calledAt: new Date() },
+      { sort: { sequenceNumber: 1 }, new: true }
+    );
 
-  const ownerIdStr = ownerId.toString();
-  const serviceIdStr = serviceId.toString();
+    if (!nextTicket) {
+      throw new ApiError(409, 'No customers are currently waiting in the queue.');
+    }
 
-  socketEmitter.emitTicketCalled(nextTicket._id.toString(), serviceIdStr, ownerIdStr, {
-    ticketNumber: nextTicket.ticketNumber,
-    customerName: nextTicket.customerName,
-    calledAt: nextTicket.calledAt,
-  });
+    lockedQueue.currentTicketId = nextTicket._id;
+    lockedQueue.dispatchLock = null;
+    await lockedQueue.save();
 
-  const waitingCount = await Ticket.countDocuments({ serviceId, status: 'WAITING' });
-  const orgIdStr = service.organizationId ? (service.organizationId._id || service.organizationId).toString() : null;
-  socketEmitter.emitQueueUpdated(serviceIdStr, ownerIdStr, {
-    organizationId: orgIdStr,
-    waitingCount,
-    currentTicket: {
-      id: nextTicket._id,
+    await popNextWaitingTicket(serviceId);
+
+    const ownerIdStr = ownerId.toString();
+    const serviceIdStr = serviceId.toString();
+
+    socketEmitter.emitTicketCalled(nextTicket._id.toString(), serviceIdStr, ownerIdStr, {
       ticketNumber: nextTicket.ticketNumber,
       customerName: nextTicket.customerName,
       customerPhone: nextTicket.customerPhone,
-      status: nextTicket.status,
       calledAt: nextTicket.calledAt,
-    },
-  });
+    });
 
-  notifyWaitingPositions(serviceId, service.averageServiceTime);
+    const waitingCount = await Ticket.countDocuments({ serviceId, status: 'WAITING' });
+    const orgIdStr = service.organizationId ? (service.organizationId._id || service.organizationId).toString() : null;
+    socketEmitter.emitQueueUpdated(serviceIdStr, ownerIdStr, {
+      organizationId: orgIdStr,
+      waitingCount,
+      currentTicket: {
+        id: nextTicket._id,
+        ticketNumber: nextTicket.ticketNumber,
+        customerName: nextTicket.customerName,
+        customerPhone: nextTicket.customerPhone,
+        status: nextTicket.status,
+        calledAt: nextTicket.calledAt,
+      },
+    });
 
-  return {
-    ticket: nextTicket,
-    queue,
-    waitingCount,
-  };
+    notifyWaitingPositions(serviceId, service.averageServiceTime);
+
+    return {
+      ticket: nextTicket,
+      queue: lockedQueue,
+      waitingCount,
+    };
+  } finally {
+    // Release dispatch lock unconditionally if still held
+    await Queue.updateOne({ serviceId, dispatchLock: { $ne: null } }, { dispatchLock: null });
+  }
 };
 
 const startServingTicket = async (ownerId, ticketId) => {

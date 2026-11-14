@@ -5,10 +5,11 @@ const { protectOwner } = require('../middlewares/authMiddleware');
 const validate = require('../middlewares/validationMiddleware');
 const {
   publicTokenValidator,
+  lookupTicketsValidator,
   mongoIdParamValidator,
 } = require('../validators/schemas');
 
-router.get('/lookup', ticketController.lookupTickets);
+router.get('/lookup', lookupTicketsValidator, validate, ticketController.lookupTickets);
 router.get('/:publicToken', publicTokenValidator, validate, ticketController.trackTicket);
 router.post('/:publicToken/cancel', publicTokenValidator, validate, ticketController.cancelTicket);
 
