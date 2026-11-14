@@ -35,6 +35,51 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     fetchUser();
+
+    // 1. Listen for global 401 unauthorized logout event
+    const handleUnauthorized = () => {
+      setUser(null);
+    };
+    window.addEventListener('kuefy:unauthorized', handleUnauthorized);
+
+    // 2. Tab focus / Window re-check: verifies user validity when returning to the tab
+    let lastFocusCheck = 0;
+    const handleFocus = async () => {
+      const now = Date.now();
+      if (now - lastFocusCheck < 10000) return;
+      lastFocusCheck = now;
+
+      const token = localStorage.getItem('kuefy_token') || localStorage.getItem('queueless_token');
+      if (token) {
+        try {
+          const res = await authApi.getMe();
+          if (res?.data?.user) {
+            setUser(res.data.user);
+          } else {
+            setUser(null);
+            localStorage.removeItem('kuefy_token');
+            localStorage.removeItem('queueless_token');
+          }
+        } catch {
+          setUser(null);
+          localStorage.removeItem('kuefy_token');
+          localStorage.removeItem('queueless_token');
+          if (
+            window.location.pathname.startsWith('/organization/') &&
+            !window.location.pathname.includes('/login') &&
+            !window.location.pathname.includes('/register')
+          ) {
+            window.location.href = '/organization/login?expired=true';
+          }
+        }
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('kuefy:unauthorized', handleUnauthorized);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const login = async (email, password) => {

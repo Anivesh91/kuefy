@@ -26,6 +26,32 @@ apiClient.interceptors.response.use(
     return response.data;
   },
   (error) => {
+    const status = error.response?.status;
+    const url = error.config?.url || '';
+
+    // If 401 occurs on an authenticated route (and not on normal login / register attempts)
+    if (status === 401 && !url.includes('/auth/login') && !url.includes('/auth/register')) {
+      try {
+        localStorage.removeItem('kuefy_token');
+        localStorage.removeItem('queueless_token');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('kuefy:unauthorized'));
+
+          // Auto-redirect if user is currently inside the owner portal
+          const currentPath = window.location.pathname;
+          if (
+            currentPath.startsWith('/organization/') &&
+            !currentPath.includes('/login') &&
+            !currentPath.includes('/register')
+          ) {
+            window.location.href = '/organization/login?expired=true';
+          }
+        }
+      } catch (storageErr) {
+        console.warn('Session clearance warning:', storageErr);
+      }
+    }
+
     const message =
       error.response?.data?.message ||
       error.message ||

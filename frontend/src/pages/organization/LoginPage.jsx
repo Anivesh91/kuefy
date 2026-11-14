@@ -35,6 +35,14 @@ export const LoginPage = ({ initialMode }) => {
   const [error, setError] = useState('');
   const [chimePlayed, setChimePlayed] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [sessionExpiredNotice, setSessionExpiredNotice] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('expired') === 'true') {
+      setSessionExpiredNotice(true);
+    }
+  }, [location.search]);
 
   // Load remembered email on initial mount
   useEffect(() => {
@@ -74,11 +82,13 @@ export const LoginPage = ({ initialMode }) => {
   const handleTabSwitch = (newMode) => {
     setMode(newMode);
     setError('');
+    setSessionExpiredNotice(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSessionExpiredNotice(false);
 
     if (mode === 'register') {
       if (!name.trim()) {
@@ -467,6 +477,22 @@ export const LoginPage = ({ initialMode }) => {
                     : 'Start managing your business queues in minutes.'}
                 </p>
               </motion.div>
+            </AnimatePresence>
+
+            {/* Session Expired / Notice Message */}
+            <AnimatePresence>
+              {sessionExpiredNotice && !error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, y: -8 }}
+                  animate={{ opacity: 1, height: 'auto', y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -8 }}
+                  transition={{ duration: 0.25 }}
+                  className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs flex items-start gap-2 overflow-hidden shadow-2xs"
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+                  <span>Your session has expired or your account was updated. Please sign in again.</span>
+                </motion.div>
+              )}
             </AnimatePresence>
 
             {/* Error Message with Smooth Expand */}
