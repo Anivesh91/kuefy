@@ -39,8 +39,14 @@ const markNoShow = asyncHandler(async (req, res) => {
 });
 
 const getVapidPublicKey = asyncHandler(async (req, res) => {
-  const { getPublicKey } = require('../config/webPush');
-  res.status(200).json(new ApiResponse(200, { publicKey: getPublicKey() }, 'VAPID public key fetched'));
+  const { getPublicKey, isConfigured } = require('../config/webPush');
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      { publicKey: getPublicKey(), enabled: isConfigured() },
+      isConfigured() ? 'VAPID public key fetched' : 'Web Push is not configured on this server'
+    )
+  );
 });
 
 const subscribePush = asyncHandler(async (req, res) => {

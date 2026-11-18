@@ -125,10 +125,10 @@ COOKIE_SECRET=super_secret_cookie_key_kuefy_2026
 # Optional: High-Throughput Redis Cache
 REDIS_URL=redis://127.0.0.1:6379
 
-# Web Push VAPID Configuration (Pre-configured defaults included)
+# Optional: Web Push VAPID Configuration (Generate via: npx web-push generate-vapid-keys)
 VAPID_EMAIL=mailto:support@kuefy.com
-VAPID_PUBLIC_KEY=BI2KYSmAhwI88dx8UuuT6mW575eQPn7Muk5r7vBksQfpmSNrI8evxP-J_RyYyZfi23sft2c7sz7QTND4J5s-jKs
-VAPID_PRIVATE_KEY=GEXKCU4ACIeVNJGpaqP7azROLR79rP7XcXuaDmiPgTQ
+VAPID_PUBLIC_KEY=your_vapid_public_key
+VAPID_PRIVATE_KEY=your_vapid_private_key
 
 # Optional: Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
